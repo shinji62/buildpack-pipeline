@@ -1,0 +1,100 @@
+#!/bin/bash
+set -u -e
+export ROOT_DIR=$PWD
+export BPNAME="${BUILDPACK_NAME:-php_buildpack}"
+
+if [ ! -f "$ROOT_DIR/env/env.json" ]; then
+  echo "Env. file do not exist"
+  exit 1
+fi
+
+
+#Lookup for buildpack name
+
+downloaded_buildpack=$(ls $ROOT_DIR/buildpack-github-release/${BPNAME}*.zip)
+downloaded_name=$(basename ${downloaded_buildpack})
+shafile=$(ls $ROOT_DIR/buildpack-github-release/${BPNAME}*SHA256SUM.txt)
+
+
+
+cd $ROOT_DIR/buildpack-github-release/
+if [ -n "${shafile}" ]; then	
+	sha256sum -c ${shafile} -s
+
+	if [ "$?" -ne 0 ]; then
+	echo "Checking Sha256sum failed ${shafile} "
+	  exit 1
+    fi
+fi
+cd -
+
+
+echo "Buildpack ${BPNAME} file to upload: ${downloaded_buildpack}"
+
+file_data=$(cat $ROOT_DIR/env/env.json )
+username=$(echo  $file_data | jq .env.user | sed 's/\"//g')
+password=$(echo $file_data | jq .env.password | sed 's/\"//g' )
+api_endpoint=$(echo $file_data | jq .env.api | sed 's/\"//g')
+
+
+cf login -a ${api_endpoint} -u ${username}  -o "system" -s "system"   -p ${password} --skip-ssl-validation
+
+
+actual_buildpack=$(cf curl /v2/buildpacks?q=name:${BPNAME} | jq .resources[].entity.filename | sed 's/\"//g')
+
+
+if [ "${actual_buildpack}" == "${downloaded_name}" ]; then
+    echo "Buildpack are currently the same"
+    echo "No update needed"
+    exit 1;
+fi
+
+
+#Now trying to update
+#unlock for update
+cf update-buildpack ${BPNAME} --unlock
+
+#Update the buildpack file 
+cf update-buildpack ${BPNAME} -p ${downloaded_buildpack}
+
+sleep 1
+
+actual_buildpack=$(cf curl /v2/buildpacks?q=name:${BPNAME} | jq .resources[].entity.filename | sed 's/\"//g')
+if [ "${actual_buildpack}" != "${downloaded_name}" ]; then
+    echo "Buildpack are currently NOT the same"
+    echo "Maybe Update failed"
+    exit 1;
+fi
+
+
+#lock the buildpack
+cf update-buildpack ${BPNAME} --lock
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
