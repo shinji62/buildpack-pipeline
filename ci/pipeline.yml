@@ -11,11 +11,114 @@ jobs:
       resource: gh-env-config-pcfdev
       trigger: true
     - get: buildpack-pipeline
-  - task:
-    file:  buildpack-pipeline/ci/updatebuildpack/updatebuildpack
+  - task: upload-php-buildpack
+    file: buildpack-pipeline/ci/updatebuildpack/updatebuildpack.yml
     params:
-      BUILDPACK_NAME=php_buildpack
+      BUILDPACK_NAME: php_buildpack
 
+
+- name: ruby_buildpack_pcfdev
+  public: true
+  serial: true
+  plan:
+  - aggregate:
+    - get: buildpack-github-release
+      resource: gh-release-ruby-buildpack
+      trigger: true
+    - get: env-info
+      resource: gh-env-config-pcfdev
+      trigger: true
+    - get: buildpack-pipeline
+  - task: upload-ruby-buildpack
+    file: buildpack-pipeline/ci/updatebuildpack/updatebuildpack.yml
+    params:
+      BUILDPACK_NAME: ruby_buildpack
+
+- name: go_buildpack_pcfdev
+  public: true
+  serial: true
+  plan:
+  - aggregate:
+    - get: buildpack-github-release
+      resource: gh-release-go-buildpack
+      trigger: true
+    - get: env-info
+      resource: gh-env-config-pcfdev
+      trigger: true
+    - get: buildpack-pipeline
+  - task: upload-go-buildpack
+    file: buildpack-pipeline/ci/updatebuildpack/updatebuildpack.yml
+    params:
+      BUILDPACK_NAME: go_buildpack
+
+- name: nodejs_buildpack_pcfdev
+  public: true
+  serial: true
+  plan:
+  - aggregate:
+    - get: buildpack-github-release
+      resource: gh-release-nodejs-buildpack
+      trigger: true
+    - get: env-info
+      resource: gh-env-config-pcfdev
+      trigger: true
+    - get: buildpack-pipeline
+  - task: upload-nodejs-buildpack
+    file: buildpack-pipeline/ci/updatebuildpack/updatebuildpack.yml
+    params:
+      BUILDPACK_NAME: nodejs_buildpack
+
+- name: python_buildpack_pcfdev
+  public: true
+  serial: true
+  plan:
+  - aggregate:
+    - get: buildpack-github-release
+      resource: gh-release-python-buildpack
+      trigger: true
+    - get: env-info
+      resource: gh-env-config-pcfdev
+      trigger: true
+    - get: buildpack-pipeline
+  - task: upload-python-buildpack
+    file: buildpack-pipeline/ci/updatebuildpack/updatebuildpack.yml
+    params:
+      BUILDPACK_NAME: python_buildpack
+
+- name: staticfile_buildpack_pcfdev
+  public: true
+  serial: true
+  plan:
+  - aggregate:
+    - get: buildpack-github-release
+      resource: gh-release-staticfile-buildpack
+      trigger: true
+    - get: env-info
+      resource: gh-env-config-pcfdev
+      trigger: true
+    - get: buildpack-pipeline
+  - task: upload-static-buildpack
+    file: buildpack-pipeline/ci/updatebuildpack/updatebuildpack.yml
+    params:
+      BUILDPACK_NAME: staticfile_buildpack
+
+
+- name: binary_buildpack_pcfdev
+  public: true
+  serial: true
+  plan:
+  - aggregate:
+    - get: buildpack-github-release
+      resource: gh-release-binary-buildpack
+      trigger: true
+    - get: env-info
+      resource: gh-env-config-pcfdev
+      trigger: true
+    - get: buildpack-pipeline
+  - task: upload-binary-buildpack
+    file: buildpack-pipeline/ci/updatebuildpack/updatebuildpack.yml
+    params:
+      BUILDPACK_NAME: binary_buildpack
 
 - name: smoketest-sandbox
   public: true
@@ -26,7 +129,25 @@ jobs:
       resource: cf-smoke-test
     - get: gh-release-php-buildpack
       trigger: true
-      passed: [php_buildpack]
+      passed: [php_buildpack_pcfdev]
+    - get: gh-release-ruby-buildpack
+      trigger: true
+      passed: [ruby_buildpack_pcfdev]
+    - get: gh-release-go-buildpack
+      trigger: true
+      passed: [go_buildpack_pcfdev]
+    - get: gh-release-nodejs-buildpack
+      trigger: true
+      passed: [nodejs_buildpack_pcfdev]
+    - get: gh-release-python-buildpack
+      trigger: true
+      passed: [python_buildpack_pcfdev]
+    - get: gh-release-staticfile-buildpack
+      trigger: true
+      passed: [staticfile_buildpack_pcfdev]
+    - get: gh-release-binary-buildpack
+      trigger: true
+      passed: [binary_buildpack_pcfdev]
     - get: env-info
       resource: gh-env-config-pcfdev
       trigger: true
@@ -48,6 +169,60 @@ resources:
     user: cloudfoundry
     repository: php-buildpack
     access_token: {{github-access-token}}
+
+#ruby buildpack
+- name: gh-release-ruby-buildpack
+  type: github-release
+  source:
+    user: cloudfoundry
+    repository: ruby-buildpack
+    access_token: {{github-access-token}}
+
+#go buildpack
+- name: gh-release-go-buildpack
+  type: github-release
+  source:
+    user: cloudfoundry
+    repository: go-buildpack
+    access_token: {{github-access-token}}
+
+#nodejs buildpack
+- name: gh-release-nodejs-buildpack
+  type: github-release
+  source:
+    user: cloudfoundry
+    repository: nodejs-buildpack
+    access_token: {{github-access-token}}
+
+
+#python buildpack
+- name: gh-release-python-buildpack
+  type: github-release
+  source:
+    user: cloudfoundry
+    repository: python-buildpack
+    access_token: {{github-access-token}}
+
+
+#static buildpack
+- name: gh-release-staticfile-buildpack
+  type: github-release
+  source:
+    user: cloudfoundry
+    repository: staticfile-buildpack
+    access_token: {{github-access-token}}
+
+#binary buildpack
+- name: gh-release-binary-buildpack
+  type: github-release
+  source:
+    user: cloudfoundry
+    repository: binary-buildpack
+    access_token: {{github-access-token}}
+
+
+
+
 
 #Env Resource pcfdev
 - name: gh-env-config-pcfdev

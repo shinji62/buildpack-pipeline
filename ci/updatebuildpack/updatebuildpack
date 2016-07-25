@@ -10,7 +10,6 @@ fi
 
 
 #Lookup for buildpack name
-
 downloaded_buildpack=$(ls $ROOT_DIR/buildpack-github-release/${BPNAME}*.zip)
 downloaded_name=$(basename ${downloaded_buildpack})
 shafile=$(ls $ROOT_DIR/buildpack-github-release/${BPNAME}*SHA256SUM.txt)
@@ -42,6 +41,8 @@ cf login -a ${api_endpoint} -u ${username}  -o "system" -s "system"   -p ${passw
 
 actual_buildpack=$(cf curl /v2/buildpacks?q=name:${BPNAME} | jq .resources[].entity.filename | sed 's/\"//g')
 
+
+echo "Moving from ${actual_buildpack} to  ${downloaded_name}"
 
 if [ "${actual_buildpack}" == "${downloaded_name}" ]; then
     echo "Buildpack are currently the same"
