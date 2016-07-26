@@ -6,6 +6,9 @@ jobs:
   - aggregate:
     - get: buildpack-github-release
       resource: gh-release-php-buildpack
+      params:
+        globs:
+          - "*cached*"
       trigger: true
     - get: env-info
       resource: gh-env-config-pcfdev
@@ -25,6 +28,9 @@ jobs:
     - get: buildpack-github-release
       resource: gh-release-ruby-buildpack
       trigger: true
+      params:
+        globs:
+          - "*cached*"
     - get: env-info
       resource: gh-env-config-pcfdev
       trigger: true
@@ -41,6 +47,9 @@ jobs:
   - aggregate:
     - get: buildpack-github-release
       resource: gh-release-go-buildpack
+      params:
+        globs:
+          - "*cached*"
       trigger: true
     - get: env-info
       resource: gh-env-config-pcfdev
@@ -59,6 +68,9 @@ jobs:
     - get: buildpack-github-release
       resource: gh-release-nodejs-buildpack
       trigger: true
+      params:
+        globs:
+          - "*cached*"
     - get: env-info
       resource: gh-env-config-pcfdev
       trigger: true
@@ -76,6 +88,9 @@ jobs:
     - get: buildpack-github-release
       resource: gh-release-python-buildpack
       trigger: true
+      params:
+        globs:
+          - "*cached*"
     - get: env-info
       resource: gh-env-config-pcfdev
       trigger: true
@@ -93,6 +108,9 @@ jobs:
     - get: buildpack-github-release
       resource: gh-release-staticfile-buildpack
       trigger: true
+      params:
+        globs:
+          - "*cached*"
     - get: env-info
       resource: gh-env-config-pcfdev
       trigger: true
@@ -111,6 +129,9 @@ jobs:
     - get: buildpack-github-release
       resource: gh-release-binary-buildpack
       trigger: true
+      params:
+        globs:
+          - "*cached*"
     - get: env-info
       resource: gh-env-config-pcfdev
       trigger: true
@@ -119,6 +140,32 @@ jobs:
     file: buildpack-pipeline/ci/updatebuildpack/updatebuildpack.yml
     params:
       BUILDPACK_NAME: binary_buildpack
+
+
+
+- name: java_buildpack_pcfdev
+  public: true
+  serial: true
+  plan:
+  - aggregate:
+    - get: buildpack-github-release
+      resource: gh-release-java-buildpack
+      trigger: true
+      params:
+        globs:
+          - "*offline*"
+    - get: env-info
+      resource: gh-env-config-pcfdev
+      trigger: true
+    - get: buildpack-pipeline
+  - task: upload-java-buildpack
+    file: buildpack-pipeline/ci/updatebuildpack/updatebuildpack.yml
+    params:
+      BUILDPACK_NAME: java_buildpack
+      DOWNLOADED_BUILDPACK_NAME: java-buildpack
+
+
+
 
 - name: smoketest-sandbox
   public: true
@@ -148,6 +195,9 @@ jobs:
     - get: gh-release-binary-buildpack
       trigger: true
       passed: [binary_buildpack_pcfdev]
+    - get: gh-release-java-buildpack
+      trigger: true
+      passed: [java_buildpack_pcfdev]
     - get: env-info
       resource: gh-env-config-pcfdev
       trigger: true
@@ -220,8 +270,13 @@ resources:
     repository: binary-buildpack
     access_token: {{github-access-token}}
 
-
-
+#binary buildpack
+- name: gh-release-java-buildpack
+  type: github-release
+  source:
+    user: cloudfoundry
+    repository: java-buildpack
+    access_token: {{github-access-token}}
 
 
 #Env Resource pcfdev

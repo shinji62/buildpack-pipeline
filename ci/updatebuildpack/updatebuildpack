@@ -2,33 +2,40 @@
 set -u -e
 export ROOT_DIR=$PWD
 export BPNAME="${BUILDPACK_NAME:-php_buildpack}"
+export DLBPNAME="${DOWNLOADED_BUILDPACK_NAME:-${BPNAME}}"
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
 
 if [ ! -f "$ROOT_DIR/env/env.json" ]; then
-  echo "Env. file do not exist"
+  echo -e "${RED}Env. file do not exist"
   exit 1
 fi
 
 
 #Lookup for buildpack name
-downloaded_buildpack=$(ls $ROOT_DIR/buildpack-github-release/${BPNAME}*.zip)
+downloaded_buildpack=$(find $ROOT_DIR/buildpack-github-release | egrep -e "${DLBPNAME}.*(cached|offline).*.zip$")
 downloaded_name=$(basename ${downloaded_buildpack})
-shafile=$(ls $ROOT_DIR/buildpack-github-release/${BPNAME}*SHA256SUM.txt)
 
 
-
-cd $ROOT_DIR/buildpack-github-release/
-if [ -n "${shafile}" ]; then	
-	sha256sum -c ${shafile} -s
-
+if test -n "$(find $ROOT_DIR/buildpack-github-release  | egrep -e "${DLBPNAME}.*(SHA256SUM).*.txt$")"
+  then
+    echo -e "${GREEN}Checking SHA ...."	
+    shafile="$(find $ROOT_DIR/buildpack-github-release  | egrep -e "${DLBPNAME}.*(SHA256SUM).*.txt$")"
+    cd $ROOT_DIR/buildpack-github-release/
+	  sha256sum -c ${shafile} -s
 	if [ "$?" -ne 0 ]; then
-	echo "Checking Sha256sum failed ${shafile} "
-	  exit 1
-    fi
+	  echo -e "${RED}Checking Sha256sum failed ${shafile} "
+	exit 1
+  fi
+  echo -e "${GREEN}SHA check succeed"
+  cd -
 fi
-cd -
 
 
-echo "Buildpack ${BPNAME} file to upload: ${downloaded_buildpack}"
+
+echo -e "${GREEN}Buildpack ${BPNAME} file to upload: ${downloaded_buildpack}${NC}"
 
 file_data=$(cat $ROOT_DIR/env/env.json )
 username=$(echo  $file_data | jq .env.user | sed 's/\"//g')
@@ -42,12 +49,12 @@ cf login -a ${api_endpoint} -u ${username}  -o "system" -s "system"   -p ${passw
 actual_buildpack=$(cf curl /v2/buildpacks?q=name:${BPNAME} | jq .resources[].entity.filename | sed 's/\"//g')
 
 
-echo "Moving from ${actual_buildpack} to  ${downloaded_name}"
+echo -e "${GREEN}Moving from ${actual_buildpack} to  ${downloaded_name}${NC}"
 
 if [ "${actual_buildpack}" == "${downloaded_name}" ]; then
-    echo "Buildpack are currently the same"
-    echo "No update needed"
-    exit 1;
+    echo -e "${RED}Buildpack are currently the same"
+    echo -e "${RED}No update needed"
+    exit 0;
 fi
 
 
@@ -62,8 +69,8 @@ sleep 1
 
 actual_buildpack=$(cf curl /v2/buildpacks?q=name:${BPNAME} | jq .resources[].entity.filename | sed 's/\"//g')
 if [ "${actual_buildpack}" != "${downloaded_name}" ]; then
-    echo "Buildpack are currently NOT the same"
-    echo "Maybe Update failed"
+    echo "${RED} Buildpack are currently NOT the same"
+    echo "${RED} Maybe Update failed"
     exit 1;
 fi
 
