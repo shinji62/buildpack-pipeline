@@ -6,6 +6,10 @@ your requirement of course using [Concourse CI](http://concourse.ci/)
 
 !["Image"](images/img-pipeline.png)
 
+#### Docker Images used
+We use the docker image [getourneau/alpine-cfcli-golang](https://github.com/shinji62/alpine-docker-cfcli-golang) 
+Which containt the CF cli and golang on a an image based on alpine linux
+
 ## Resources
 
 ### Buildpack resource

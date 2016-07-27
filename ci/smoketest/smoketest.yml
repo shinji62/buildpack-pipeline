@@ -4,8 +4,8 @@ platform: linux
 image_resource:
   type: docker-image
   source:
-    repository: getourneau/cf_cli
-    tag: alpine-test
+    repository: getourneau/alpine-cfcli-golang
+    tag: latest
 
 inputs:
   - name: buildpack-pipeline
