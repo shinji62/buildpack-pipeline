@@ -214,7 +214,33 @@ jobs:
     - get: acceptance-tests
       resource: cf-acceptance-tests
       trigger: true
-      passed: [smoketest-sandbox]
+    - get: gh-release-php-buildpack
+      trigger: true
+      passed: [php_buildpack_pcfdev,smoketest-sandbox]
+    - get: gh-release-ruby-buildpack
+      trigger: true
+      passed: [ruby_buildpack_pcfdev,smoketest-sandbox]
+    - get: gh-release-go-buildpack
+      trigger: true
+      passed: [go_buildpack_pcfdev,smoketest-sandbox]
+    - get: gh-release-nodejs-buildpack
+      trigger: true
+      passed: [nodejs_buildpack_pcfdev,smoketest-sandbox]
+    - get: gh-release-python-buildpack
+      trigger: true
+      passed: [python_buildpack_pcfdev,smoketest-sandbox]
+    - get: gh-release-staticfile-buildpack
+      trigger: true
+      passed: [staticfile_buildpack_pcfdev,smoketest-sandbox]
+    - get: gh-release-binary-buildpack
+      trigger: true
+      passed: [binary_buildpack_pcfdev,smoketest-sandbox]
+    - get: gh-release-java-buildpack
+      trigger: true
+      passed: [java_buildpack_pcfdev,smoketest-sandbox]
+    - get: env-info
+      resource: gh-env-config-pcfdev
+      trigger: true
     - get: env-info
       resource: gh-env-config-pcfdev
       trigger: true

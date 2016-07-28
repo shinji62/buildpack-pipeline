@@ -14,10 +14,6 @@ fi
 
 file_data=$(cat $ROOT_DIR/env/env.json)
 
-#compiling smoke-test
-
-bin/compile
-
 
 cat<<EOF >integration_config.json
 {
@@ -33,5 +29,5 @@ EOF
 
 root=$(pwd)
 set -x 
-CONFIG=$root/integration_config.json ./bin/test_default -nodes=2 -v
+CONFIG=$root/integration_config.json ./bin/diego_test_default -nodes=2 -v
 
