@@ -1,0 +1,37 @@
+#!/bin/bash
+set -u
+export ROOT_DIR=$PWD
+export GOPATH=$PWD/gopath
+export PATH=$GOPATH/bin:$PATH
+cd $GOPATH/src/github.com/cloudfoundry/cf-acceptance-tests/
+
+
+if [ ! -f "$ROOT_DIR/env/env.json" ]; then
+  echo "Env. file do not exist"
+  exit 1
+fi
+
+
+file_data=$(cat $ROOT_DIR/env/env.json)
+
+#compiling smoke-test
+
+bin/compile
+
+
+cat<<EOF >integration_config.json
+{
+  "api"                  : $(echo $file_data | jq .env.api),
+  "apps_domain"          : $(echo $file_data | jq .env.apps_domain),
+  "admin_user"           : $(echo $file_data | jq .env.user),
+  "admin_password"       : $(echo $file_data | jq .env.password),
+  "use_http"             : $(echo $file_data | jq .acceptance_tests.use_http),
+  "backend"              : $(echo $file_data | jq .smoke_test.backend),
+  "skip_ssl_validation"  : $(echo $file_data | jq .acceptance_tests.skip_ssl_validation)
+}
+EOF
+
+root=$(pwd)
+set -x 
+CONFIG=$root/integration_config.json ./bin/test_default -nodes=2 -v
+

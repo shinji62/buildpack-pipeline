@@ -65,6 +65,8 @@ Enviroment config file example
 
 ## Job
 Job are pretty easy you can just take a look at the pipeline
+
+### Buildpack uploading
 `BUILDPACK_NAME` is the name of the buildpack in cloudfoundry 
 ```yaml
 - name: binary_buildpack_pcfdev
@@ -84,6 +86,35 @@ Job are pretty easy you can just take a look at the pipeline
     params:
       BUILDPACK_NAME: binary_buildpack
 ```
+
+
+### Smoke test and Acceptance Test
+There is currently two type of test, [smoke-test](https://github.com/cloudfoundry/cf-smoke-tests) and [acceptance-test](https://github.com/cloudfoundry/cf-acceptance-tests) from Cloudfoundry
+
+Important
+* smoke-test can be run in any environment.
+* Acceptance-test are more aggressive and should be run in non-production env.
+
+
+```yaml
+- name: acceptance-sandbox
+  public: true
+  serial: true
+  plan:
+  - aggregate:
+    - get: acceptance-tests
+      resource: cf-acceptance-tests
+      trigger: true
+      passed: [smoketest-sandbox]
+    - get: env-info
+      resource: gh-env-config-pcfdev
+      trigger: true
+    - get: buildpack-pipeline
+  - task: acceptance-tests
+    file: buildpack-pipeline/ci/acceptancetests/acceptancetests.yml 
+
+```
+
 
 
 

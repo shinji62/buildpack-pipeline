@@ -206,8 +206,21 @@ jobs:
     file: buildpack-pipeline/ci/smoketest/smoketest.yml 
 
 
-  
-
+- name: acceptance-sandbox
+  public: true
+  serial: true
+  plan:
+  - aggregate:
+    - get: acceptance-tests
+      resource: cf-acceptance-tests
+      trigger: true
+      passed: [smoketest-sandbox]
+    - get: env-info
+      resource: gh-env-config-pcfdev
+      trigger: true
+    - get: buildpack-pipeline
+  - task: acceptance-tests
+    file: buildpack-pipeline/ci/acceptancetests/acceptancetests.yml 
 
 
 
@@ -304,7 +317,16 @@ resources:
     branch: master
     private_key: {{private-key-github-concourse}}
 
-    
+
+
+#Cloudfoundry / Acceptance test
+- name: cf-acceptance-tests
+  type: git
+  source:
+    uri: git@github.com:cloudfoundry/cf-acceptance-tests.git
+    branch: master
+    private_key: {{private-key-github-concourse}}
+
 
 
 
