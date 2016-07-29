@@ -8,7 +8,7 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
-if [ ! -f "$ROOT_DIR/env/env.json" ]; then
+if [ ! -f "$ROOT_DIR/env/metadata" ]; then
   echo -e "${RED}Env. file do not exist"
   exit 1
 fi
@@ -37,7 +37,7 @@ fi
 
 echo -e "${GREEN}Buildpack ${BPNAME} file to upload: ${downloaded_buildpack}${NC}"
 
-file_data=$(cat $ROOT_DIR/env/env.json )
+file_data=$(cat $ROOT_DIR/env/metadata )
 username=$(echo  $file_data | jq .env.user | sed 's/\"//g')
 password=$(echo $file_data | jq .env.password | sed 's/\"//g' )
 api_endpoint=$(echo $file_data | jq .env.api | sed 's/\"//g')
