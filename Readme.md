@@ -4,7 +4,7 @@ This repository containt an example of buildpack integration pipeline and could 
 your requirement of course using [Concourse CI](http://concourse.ci/) 
 
 
-!["Image"](images/img-pipeline.png)
+!["Image"](images/buildpackv2.png)
 
 
 ## Change with the v1.
