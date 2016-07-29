@@ -19,8 +19,9 @@ jobs:
     params:
       BUILDPACK_NAME: php_buildpack
     on_failure:
-      put: local-env
-      params: {release: local-env}
+      put: env-info
+      resource: local-env
+      params: {release: env-info}
 
 
 
@@ -40,8 +41,9 @@ jobs:
   - task: smoke-test
     file: buildpack-pipeline/ci/smoketest/smoketest.yml
     on_failure:
-      put: local-env
-      params: {release: local-env}
+      put: env-info
+      resource: local-env
+      params: {release: env-info}
 
 
 - name: acceptance-sandbox
@@ -60,8 +62,9 @@ jobs:
   - task: acceptance-tests
     file: buildpack-pipeline/ci/acceptancetests/acceptancetests.yml
     ensure:
-      put: local-env
-      params: {release: local-env}
+      put: env-info
+      resource: local-env
+      params: {release: env-info}
 
 
 

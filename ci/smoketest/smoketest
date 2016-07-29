@@ -13,7 +13,7 @@ fi
 
 
 
-file_data=$(cat $ROOT_DIR/env/metadatas)
+file_data=$(cat $ROOT_DIR/env/metadata)
 
 #compiling smoke-test
 
