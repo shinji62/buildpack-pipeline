@@ -6,13 +6,13 @@ export PATH=$GOPATH/bin:$PATH
 cd $GOPATH/src/github.com/cloudfoundry/cf-smoke-tests/
 
 
-if [ ! -f "$ROOT_DIR/env/env.json" ]; then
+if [ ! -f "$ROOT_DIR/env/metadata" ]; then
   echo "Env. file do not exist"
   exit 1
 fi
 
 
-file_data=$(cat $ROOT_DIR/env/env.json)
+file_data=$(cat $ROOT_DIR/env/metadatas)
 
 #compiling smoke-test
 

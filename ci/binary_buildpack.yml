@@ -1,0 +1,109 @@
+---
+jobs:
+- name: binary_buildpack_pcfdev
+public: true
+serial: true
+plan:
+- aggregate:
+  - get: buildpack-github-release
+    resource: gh-release-binary-buildpack
+    trigger: true
+    params:
+      globs:
+        - "*cached*"
+  - get: env-info
+    resource: gh-env-config-pcfdev
+    trigger: true
+  - get: buildpack-pipeline
+- task: upload-binary-buildpack
+  file: buildpack-pipeline/ci/updatebuildpack/updatebuildpack.yml
+  params:
+    BUILDPACK_NAME: binary_buildpack
+
+
+
+- name: smoketest-sandbox
+  public: true
+  serial: true
+  plan:
+  - aggregate:
+    - get: smoke-test
+      resource: cf-smoke-test
+    - get: gh-release-binary-buildpack
+      trigger: true
+      passed: [binary_buildpack_pcfdev]
+    - get: env-info
+      resource: gh-env-config-pcfdev
+      trigger: true
+    - get: buildpack-pipeline
+  - task: smoke-test
+    file: buildpack-pipeline/ci/smoketest/smoketest.yml 
+
+
+- name: acceptance-sandbox
+  public: true
+  serial: true
+  plan:
+  - aggregate:
+    - get: acceptance-tests
+      resource: cf-acceptance-tests
+      trigger: true
+    - get: gh-release-binary-buildpack
+      trigger: true
+      passed: [smoketest-sandbox]
+    - get: env-info
+      resource: gh-env-config-pcfdev
+      trigger: true
+    - get: buildpack-pipeline
+  - task: acceptance-tests
+    file: buildpack-pipeline/ci/acceptancetests/acceptancetests.yml 
+
+
+
+
+resources:
+#Env Resource pcfdev
+- name: gh-env-config-pcfdev
+  type: git
+  source:
+    uri: git@github.com:shinji62/env-config.git
+    branch: pcfdev
+    private_key: {{private-key-github-concourse}}
+
+
+  #php buildpack
+- name: gh-release-binary-buildpack
+  type: github-release
+  source:
+    user: cloudfoundry
+    repository: binary-buildpack
+    access_token: {{github-access-token}}
+
+
+
+#Cloudfoundry /smoke test
+- name: cf-smoke-test
+  type: git
+  source:
+    uri: git@github.com:cloudfoundry/cf-smoke-tests.git
+    branch: master
+    private_key: {{private-key-github-concourse}}
+
+
+
+#Cloudfoundry / Acceptance test
+- name: cf-acceptance-tests
+  type: git
+  source:
+    uri: git@github.com:cloudfoundry/cf-acceptance-tests.git
+    branch: master
+    private_key: {{private-key-github-concourse}}
+
+
+#This buildpack piepline
+- name: buildpack-pipeline
+  type: git
+  source:
+    uri: git@github.com:shinji62/buildpack-pipeline.git
+    branch: master
+    private_key: {{private-key-github-concourse}}
