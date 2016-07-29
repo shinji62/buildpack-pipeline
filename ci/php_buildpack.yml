@@ -58,7 +58,7 @@ jobs:
       passed: [smoketest-sandbox]
     - get: env-info
       resource: local-env
-    - get: buildpack-pipeline
+    - get: buildpack-pipeline 
   - task: acceptance-tests
     file: buildpack-pipeline/ci/acceptancetests/acceptancetests.yml
     ensure:

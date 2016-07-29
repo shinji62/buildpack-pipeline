@@ -1,24 +1,27 @@
----
 jobs:
 - name: ruby_buildpack_pcfdev
-public: true
-serial: true
-plan:
-- aggregate:
-  - get: buildpack-github-release
-    resource: gh-release-ruby-buildpack
-    trigger: true
+  public: true
+  serial: true
+  plan:
+  - aggregate:
+    - get: buildpack-github-release
+      resource: gh-release-ruby-buildpack
+      params:
+        globs:
+          - "*cached*"
+      trigger: true
+    - put: env-info
+      resource: local-env
+      params: {acquire: true}
+    - get: buildpack-pipeline
+  - task: upload-ruby-buildpack
+    file: buildpack-pipeline/ci/updatebuildpack/updatebuildpack.yml
     params:
-      globs:
-        - "*cached*"
-  - get: env-info
-    resource: gh-env-config-pcfdev
-    trigger: true
-  - get: buildpack-pipeline
-- task: upload-ruby-buildpack
-  file: buildpack-pipeline/ci/updatebuildpack/updatebuildpack.yml
-  params:
-    BUILDPACK_NAME: ruby_buildpack
+      BUILDPACK_NAME: ruby_buildpack
+    on_failure:
+      put: env-info
+      resource: local-env
+      params: {release: env-info}
 
 
 
@@ -33,11 +36,14 @@ plan:
       trigger: true
       passed: [ruby_buildpack_pcfdev]
     - get: env-info
-      resource: gh-env-config-pcfdev
-      trigger: true
+      resource: local-env
     - get: buildpack-pipeline
   - task: smoke-test
-    file: buildpack-pipeline/ci/smoketest/smoketest.yml 
+    file: buildpack-pipeline/ci/smoketest/smoketest.yml
+    on_failure:
+      put: env-info
+      resource: local-env
+      params: {release: env-info}
 
 
 - name: acceptance-sandbox
@@ -47,30 +53,33 @@ plan:
   - aggregate:
     - get: acceptance-tests
       resource: cf-acceptance-tests
-      trigger: true
     - get: gh-release-ruby-buildpack
       trigger: true
       passed: [smoketest-sandbox]
     - get: env-info
-      resource: gh-env-config-pcfdev
-      trigger: true
-    - get: buildpack-pipeline
+      resource: local-env
+    - get: buildpack-pipeline 
   - task: acceptance-tests
-    file: buildpack-pipeline/ci/acceptancetests/acceptancetests.yml 
+    file: buildpack-pipeline/ci/acceptancetests/acceptancetests.yml
+    ensure:
+      put: env-info
+      resource: local-env
+      params: {release: env-info}
 
 
 
 
 resources:
-#Env Resource pcfdev
-- name: gh-env-config-pcfdev
-  type: git
+- name: local-env
+  type: pool
   source:
-    uri: git@github.com:shinji62/env-config.git
-    branch: pcfdev
+    uri: git@github.com:shinji62/pool-concourse-config.git
+    branch: master
+    pool: local
     private_key: {{private-key-github-concourse}}
 
-  #php buildpack
+
+  #ruby buildpack
 - name: gh-release-ruby-buildpack
   type: github-release
   source:
@@ -98,10 +107,13 @@ resources:
     branch: master
     private_key: {{private-key-github-concourse}}
 
+
 #This buildpack piepline
 - name: buildpack-pipeline
   type: git
   source:
     uri: git@github.com:shinji62/buildpack-pipeline.git
-    branch: master
+    branch: rewrite/split-pipeline
     private_key: {{private-key-github-concourse}}
+
+

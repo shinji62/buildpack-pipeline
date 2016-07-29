@@ -6,9 +6,18 @@ your requirement of course using [Concourse CI](http://concourse.ci/)
 
 !["Image"](images/img-pipeline.png)
 
+
+## Change with the v1.
+We are now doing a pipeline by buildpack, this is more flexible and more portable.
+
+We stop using env-conf, but we use the [pool-resource](https://github.com/concourse/pool-resource) this have two advantage :
+
+* Lock environment (like pcfdev) to run one buildpack pipeline at the time
+* Pass the environment configuration (replacing env-conf use in v1)
+
 #### Docker Images used
 We use the docker image [getourneau/alpine-cfcli-golang](https://github.com/shinji62/alpine-docker-cfcli-golang) 
-Which containt the CF cli and golang on a an image based on alpine linux
+Which contain the CF cli and golang on a an image based on alpine linux
 
 ## Resources
 
@@ -23,16 +32,18 @@ We use the Github release of buildpack.
     access_token: {{github-access-token}}
 ```
 
-### Environment configuration
+### Environment configuration and Lock
 Most of the time there are multiple environment like PROD, STG, DEV and so on.
-We use the github repository and the branch to specify multiple env, and smoke test config.
-You can take a look here [env-config](https://github.com/shinji62/env-config/tree/pcfdev)
+We use the github repository and the [pool-resource](https://github.com/concourse/pool-resource) to specify multiple env, and smoke test config and lock the pipeline by env.
+
+You can take a look here [pool-concourse-config](hhttps://github.com/shinji62/pool-concourse-config)
 ```yaml
-- name: gh-env-config-pcfdev
-  type: git
+- name: local-env
+  type: pool
   source:
-    uri: git@github.com:shinji62/env-config.git
-    branch: pcfdev
+    uri: git@github.com:shinji62/pool-concourse-config.git
+    branch: master
+    pool: local
     private_key: {{private-key-github-concourse}}
 ```
 
@@ -68,23 +79,32 @@ Job are pretty easy you can just take a look at the pipeline
 
 ### Buildpack uploading
 `BUILDPACK_NAME` is the name of the buildpack in cloudfoundry 
+`DOWNLOADED_BUILDPACK_NAME` is the name of the downloaded builpack (prefix of the name ex java-buildpack-offline.zip we will use java-buildpack) by default this value is the same as `BUILPACK_NAME`
 ```yaml
-- name: binary_buildpack_pcfdev
+jobs:
+- name: go_buildpack_pcfdev
   public: true
   serial: true
   plan:
   - aggregate:
     - get: buildpack-github-release
-      resource: gh-release-binary-buildpack
+      resource: gh-release-go-buildpack
+      params:
+        globs:
+          - "*cached*"
       trigger: true
-    - get: env-info
-      resource: gh-env-config-pcfdev
-      trigger: true
+    - put: env-info
+      resource: local-env
+      params: {acquire: true}
     - get: buildpack-pipeline
-  - task: upload-binary-buildpack
+  - task: upload-go-buildpack
     file: buildpack-pipeline/ci/updatebuildpack/updatebuildpack.yml
     params:
-      BUILDPACK_NAME: binary_buildpack
+      BUILDPACK_NAME: go_buildpack
+    on_failure:
+      put: env-info
+      resource: local-env
+      params: {release: env-info}
 ```
 
 
@@ -104,15 +124,18 @@ Important
   - aggregate:
     - get: acceptance-tests
       resource: cf-acceptance-tests
+    - get: gh-release-java-buildpack
       trigger: true
       passed: [smoketest-sandbox]
     - get: env-info
-      resource: gh-env-config-pcfdev
-      trigger: true
-    - get: buildpack-pipeline
+      resource: local-env
+    - get: buildpack-pipeline 
   - task: acceptance-tests
-    file: buildpack-pipeline/ci/acceptancetests/acceptancetests.yml 
-
+    file: buildpack-pipeline/ci/acceptancetests/acceptancetests.yml
+    ensure:
+      put: env-info
+      resource: local-env
+      params: {release: env-info}
 ```
 
 
@@ -122,10 +145,10 @@ Important
 ## Usage
 Deploy to concourse is easy as 
 ```bash
-fly -t target set-pipeline -c ci/pipeline.yml --load-vars-from credentials.yml -p buildpack-pipeline
+fly -t target set-pipeline -c ci/(BUILDPACK_NAME)_buildpack.yml --load-vars-from credentials.yml -p (BUILDPACK_NAME)-pipeline
 ```
 
-
+`BUILDPACK_NAME` is the name of the buildpack you want to use.
 
 
 
