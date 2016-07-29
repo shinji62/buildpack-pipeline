@@ -18,6 +18,10 @@ jobs:
     file: buildpack-pipeline/ci/updatebuildpack/updatebuildpack.yml
     params:
       BUILDPACK_NAME: php_buildpack
+    on_failure:
+      put: local-env
+      params: {release: local-env}
+
 
 
 - name: smoketest-sandbox
@@ -34,7 +38,10 @@ jobs:
       resource: local-env
     - get: buildpack-pipeline
   - task: smoke-test
-    file: buildpack-pipeline/ci/smoketest/smoketest.yml 
+    file: buildpack-pipeline/ci/smoketest/smoketest.yml
+    on_failure:
+      put: local-env
+      params: {release: local-env}
 
 
 - name: acceptance-sandbox
@@ -42,8 +49,6 @@ jobs:
   serial: true
   plan:
   - aggregate:
-    - get:
-      passed[]
     - get: acceptance-tests
       resource: cf-acceptance-tests
     - get: gh-release-php-buildpack
@@ -105,7 +110,7 @@ resources:
   type: git
   source:
     uri: git@github.com:shinji62/buildpack-pipeline.git
-    branch: master
+    branch: rewrite/split-pipeline
     private_key: {{private-key-github-concourse}}
 
 
