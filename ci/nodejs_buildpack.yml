@@ -13,9 +13,9 @@ jobs:
     - put: env-info
       resource: local-env
       params: {acquire: true}
-    - get: buildpack-pipeline
+    - get: concourse-cloudfoundry-tasks
   - task: upload-nodejs-buildpack
-    file: buildpack-pipeline/ci/updatebuildpack/updatebuildpack.yml
+    file: concourse-cloudfoundry-tasks/ci/updatebuildpack/updatebuildpack.yml
     params:
       BUILDPACK_NAME: nodejs_buildpack
     on_failure:
@@ -37,9 +37,9 @@ jobs:
       passed: [nodejs_buildpack_pcfdev]
     - get: env-info
       resource: local-env
-    - get: buildpack-pipeline
+    - get: concourse-cloudfoundry-tasks
   - task: smoke-test
-    file: buildpack-pipeline/ci/smoketest/smoketest.yml
+    file: concourse-cloudfoundry-tasks/ci/smoketest/smoketest.yml
     on_failure:
       put: env-info
       resource: local-env
@@ -58,9 +58,9 @@ jobs:
       passed: [smoketest-sandbox]
     - get: env-info
       resource: local-env
-    - get: buildpack-pipeline 
+    - get: concourse-cloudfoundry-tasks 
   - task: acceptance-tests
-    file: buildpack-pipeline/ci/acceptancetests/acceptancetests.yml
+    file: concourse-cloudfoundry-tasks/ci/acceptancetests/acceptancetests.yml
     ensure:
       put: env-info
       resource: local-env
@@ -108,12 +108,12 @@ resources:
     private_key: {{private-key-github-concourse}}
 
 
-#This buildpack piepline
-- name: buildpack-pipeline
+#Common script repository
+- name: concourse-cloudfoundry-tasks
   type: git
   source:
-    uri: git@github.com:shinji62/buildpack-pipeline.git
-    branch: rewrite/split-pipeline
+    uri: git@github.com:shinji62/concourse-cloudfoundry-tasks.git
+    branch: master
     private_key: {{private-key-github-concourse}}
 
 
