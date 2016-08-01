@@ -99,9 +99,9 @@ jobs:
     - put: env-info
       resource: local-env
       params: {acquire: true}
-    - get: buildpack-pipeline
+    - get: concourse-cloudfoundry-tasks
   - task: upload-go-buildpack
-    file: buildpack-pipeline/ci/updatebuildpack/updatebuildpack.yml
+    file: concourse-cloudfoundry-tasks/ci/updatebuildpack/updatebuildpack.yml
     params:
       BUILDPACK_NAME: go_buildpack
     on_failure:
@@ -132,9 +132,9 @@ Important
       passed: [smoketest-sandbox]
     - get: env-info
       resource: local-env
-    - get: buildpack-pipeline 
+    - get: concourse-cloudfoundry-tasks 
   - task: acceptance-tests
-    file: buildpack-pipeline/ci/acceptancetests/acceptancetests.yml
+    file: concourse-cloudfoundry-tasks/ci/acceptancetests/acceptancetests.yml
     ensure:
       put: env-info
       resource: local-env
