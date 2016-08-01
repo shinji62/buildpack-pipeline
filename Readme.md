@@ -80,6 +80,9 @@ Job are pretty easy you can just take a look at the pipeline
 ### Buildpack uploading
 `BUILDPACK_NAME` is the name of the buildpack in cloudfoundry 
 `DOWNLOADED_BUILDPACK_NAME` is the name of the downloaded builpack (prefix of the name ex java-buildpack-offline.zip we will use java-buildpack) by default this value is the same as `BUILPACK_NAME`
+
+* Important if the buildpack is already uploaded we consider the job as passed (Green status). 
+
 ```yaml
 jobs:
 - name: go_buildpack_pcfdev
